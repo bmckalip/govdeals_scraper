@@ -3,6 +3,9 @@ import requests
 import re
 import json
 import unicodecsv as csv
+import os
+import datetime
+import errno
 
 class Scraper:
     def __init__(self):
@@ -95,8 +98,24 @@ class Scraper:
         columns = ["description", "bid", "numBids", "auctionClose", "location", "href", "photo"]
         filename = str(filename).strip().replace(' ', '_')
         filename = re.sub(r'(?u)[^-\w.]', '', filename)
+
+        my_dir = os.path.join(
+            os.getcwd(), 
+            "output",
+            filename
+        )
+
         try:
-            f = "../output/{}.csv".format(filename)
+            os.makedirs(my_dir)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                print("error creating directory")
+                return
+
+        try:
+            dt = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+            f = os.path.join(my_dir, "{}.csv".format(dt))
+            print("Creating file: {}".format(f))
             with open(f, 'wb+') as csvfile:
                 writer = csv.DictWriter(csvfile, fieldnames=columns)
                 writer.writeheader()
@@ -104,4 +123,6 @@ class Scraper:
                     writer.writerow(datum)
         except IOError as e:
             print("error occurred while writing to file")
-            print(e)
+            print(e)                
+
+        
